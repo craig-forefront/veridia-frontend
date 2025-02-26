@@ -1,0 +1,16 @@
+.main-container {  display: flex;  height: 100vh;}.main-content {  flex-grow: 1;  padding: 20px;  background-color: #f8f9fa; /* Light background color for main content */}
+
+.sidebar-accordion .accordion-button {
+  flex-direction: row-reverse; /* Positions the arrow on the left */
+}
+
+.sidebar-accordion .accordion-button::after {
+  margin-right: 0.5rem;
+  margin-left: 0;
+  transform: rotate(270deg); /* Closed state: arrow points right */
+  transition: transform 0.2s ease;
+}
+
+.sidebar-accordion .accordion-button:not(.collapsed)::after {
+  transform: rotate(0deg); /* Open state: arrow points down */
+}
