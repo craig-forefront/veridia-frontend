@@ -1,21 +1,25 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { Container, Row, Col, Button } from 'react-bootstrap';
+import { useDropzone } from 'react-dropzone';
 
 const SearchPage = () => {
   const [images, setImages] = useState([]);
 
-  const handleFileChange = (event) => {
-    const files = event.target.files;
-    if (files.length) {
-      // Limit to the first 100 files
-      const limitedFiles = Array.from(files).slice(0, 100);
-      const filesArray = limitedFiles.map(file => ({
-        file,
-        preview: URL.createObjectURL(file),
-        selected: true, // default to selected
-      }));
-      setImages(filesArray);
-    }
-  };
+  const onDrop = useCallback((acceptedFiles) => {
+    const limitedFiles = acceptedFiles.slice(0, 100);
+    const filesArray = limitedFiles.map(file => ({
+      file,
+      preview: URL.createObjectURL(file),
+      selected: true,
+    }));
+    setImages(filesArray);
+  }, []);
+
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({
+    onDrop,
+    accept: 'image/*',
+    multiple: true,
+  });
 
   const toggleSelect = (index) => {
     setImages(prevImages => {
@@ -32,56 +36,59 @@ const SearchPage = () => {
   const handleSearch = () => {
     const selectedImages = images.filter(img => img.selected);
     console.log("Submitting images for search:", selectedImages);
-    // Example: Create FormData and append selected images
-    // const formData = new FormData();
-    // selectedImages.forEach((img, idx) => {
-    //   formData.append(`image_${idx}`, img.file);
-    // });
-    // fetch('/api/search', { method: 'POST', body: formData })
-    //   .then(response => response.json())
-    //   .then(data => console.log(data))
-    //   .catch(error => console.error('Error:', error));
   };
 
   useEffect(() => {
-    // Cleanup URL objects
     return () => {
       images.forEach(img => URL.revokeObjectURL(img.preview));
     };
   }, [images]);
 
   return (
-    <div className="container mt-3">
+    <Container className="mt-3">
       <h1>Search Page</h1>
-      <input type="file" accept="image/*" multiple onChange={handleFileChange} />
+      <div
+        {...getRootProps()}
+        style={{
+          border: '2px dashed #ccc',
+          padding: '20px',
+          textAlign: 'center',
+          cursor: 'pointer',
+        }}
+      >
+        <input {...getInputProps()} />
+        {isDragActive ? (
+          <p>Drop the images here ...</p>
+        ) : (
+          <p>Drag 'n' drop some images here, or click to select files</p>
+        )}
+      </div>
       {images.length > 0 && (
         <div className="mt-3">
           <h4>Select images for search (max 100):</h4>
-          <div className="row">
+          <Row>
             {images.map((img, idx) => (
-              <div key={idx} className="col-3 mb-3">
-                {/* Make the whole container clickable */}
+              <Col key={idx} xs={6} md={4} lg={3} className="mb-3">
                 <div
                   style={{
                     position: "relative",
-                    width: "150px",
+                    width: "100%",
                     height: "150px",
                     border: img.selected ? "3px solid #007bff" : "1px solid #ccc",
                     overflow: "hidden",
-                    cursor: "pointer" // Change cursor to pointer
+                    cursor: "pointer"
                   }}
-                  onClick={() => toggleSelect(idx)} // Toggle selection on container click
+                  onClick={() => toggleSelect(idx)}
                 >
                   <img
                     src={img.preview}
                     alt={`Preview ${idx}`}
                     style={{ width: "100%", height: "100%", objectFit: "cover" }}
                   />
-                  {/* Show the checkbox */}
                   <input
                     type="checkbox"
                     checked={img.selected}
-                    readOnly // Make it read-only
+                    readOnly
                     style={{
                       position: "absolute",
                       top: "5px",
@@ -95,19 +102,19 @@ const SearchPage = () => {
                 <p className="text-center" style={{ fontSize: "0.8rem" }}>
                   {img.file.name}
                 </p>
-              </div>
+              </Col>
             ))}
-          </div>
-          <button
-            className="btn btn-primary"
+          </Row>
+          <Button
+            variant="primary"
             onClick={handleSearch}
             disabled={!images.some(img => img.selected)}
           >
             Submit for Search
-          </button>
+          </Button>
         </div>
       )}
-    </div>
+    </Container>
   );
 };
 
